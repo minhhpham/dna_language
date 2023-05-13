@@ -97,13 +97,14 @@ def main(corpus_filepath: str, wordpiece_vocab_path: str, batch_size: int):
     optim = torch.optim.AdamW(model.parameters(), lr=1e-4)
     torch.set_printoptions(edgeitems=10)
 
+    n_batch_2val = round(4e6 / batch_size)
     for epoch in range(100):
-        model.train()
         # train
         for bid, batch in tqdm(
                 enumerate(trainloader),
                 desc=f"train epoch {epoch}",
                 total=len(trainloader)):
+            model.train()
             inputs, attentions, labels = batch
             optim.zero_grad()
             inputs = inputs.to(DEVICE)
@@ -120,26 +121,28 @@ def main(corpus_filepath: str, wordpiece_vocab_path: str, batch_size: int):
             )
             mean_loss.mean().backward()
             optim.step()
-        # eval
-        model.eval()
-        val_loss = []
-        for batch in tqdm(valloader,
-                          desc=f"eval epoch {epoch}",
-                          total=len(valloader)):
-            inputs, attentions, labels = batch
-            inputs = inputs.to(DEVICE)
-            labels = labels.to(DEVICE)
-            attention_mask = attentions.to(DEVICE)
-            outputs = model(input_ids=inputs,
-                            attention_mask=attention_mask,
-                            labels=labels)
-            val_loss.append(outputs.loss.mean().item())
-        val_loss = sum(val_loss) / len(val_loss)
-        monitor.writer.add_scalar(
-            tag="Loss/Eval",
-            scalar_value=val_loss,
-            global_step=epoch
-        )
+
+            # run validation every n_batch_2val batches
+            if bid % n_batch_2val == 0:
+                model.eval()
+                val_loss = []
+                for val_batch in tqdm(valloader,
+                                      desc=f"eval epoch {epoch}",
+                                      total=len(valloader)):
+                    inputs, attentions, labels = val_batch
+                    inputs = inputs.to(DEVICE)
+                    labels = labels.to(DEVICE)
+                    attention_mask = attentions.to(DEVICE)
+                    outputs = model(input_ids=inputs,
+                                    attention_mask=attention_mask,
+                                    labels=labels)
+                    val_loss.append(outputs.loss.mean().item())
+                val_loss = sum(val_loss) / len(val_loss)
+                monitor.writer.add_scalar(
+                    tag="Loss/Eval",
+                    scalar_value=val_loss,
+                    global_step=epoch * len(trainloader) + bid
+                )
         # save model after epoch
         model.module.save_pretrained(
             "./saved_models/bert_encoder")
