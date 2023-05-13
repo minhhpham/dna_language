@@ -144,8 +144,7 @@ def main(corpus_filepath: str, wordpiece_vocab_path: str, batch_size: int):
                     global_step=epoch * len(trainloader) + bid
                 )
         # save model after epoch
-        model.module.save_pretrained(
-            "./saved_models/bert_encoder")
+        model.module.save_pretrained(f"./saved_models/bert_encoder_{epoch}")
 
 
 if __name__ == "__main__":
