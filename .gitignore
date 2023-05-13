@@ -1,0 +1,7 @@
+.vscode
+saved_models/*
+tensorboard/*
+*__pycache__*
+*.sqlite
+*.pkl
+tmp/*
