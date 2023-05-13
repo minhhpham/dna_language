@@ -1,8 +1,8 @@
 import argparse
 from typing import List, Tuple
 
-import tensorflow as tf
 import torch
+import tensorflow as tf
 from tensorflow_text import BertTokenizer
 from torch import nn, tensor
 from torch.utils.data import DataLoader, Dataset
