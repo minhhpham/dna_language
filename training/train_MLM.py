@@ -13,12 +13,15 @@ from training.monitor import TensorboardMonitor
 
 tf.config.set_visible_devices([], 'GPU')
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+global TESTING_CODE
 
 
 def get_data(filepath: str) -> List[str]:
     lines = []
     with open(filepath, 'r') as file:
-        for line in tqdm(file, desc="reading data file"):
+        for i, line in tqdm(enumerate(file), desc="reading data file"):
+            if TESTING_CODE and i == 10000:
+                break
             lines.append(line.strip())
     return lines
 
@@ -97,7 +100,7 @@ def main(corpus_filepath: str, wordpiece_vocab_path: str, batch_size: int):
     optim = torch.optim.AdamW(model.parameters(), lr=1e-4)
     torch.set_printoptions(edgeitems=10)
 
-    n_batch_2val = round(4e6 / batch_size)
+    n_batch_2val = round(5e3 / batch_size) if TESTING_CODE else round(4e6 / batch_size)
     for epoch in range(100):
         # train
         for bid, batch in tqdm(
@@ -123,7 +126,7 @@ def main(corpus_filepath: str, wordpiece_vocab_path: str, batch_size: int):
             optim.step()
 
             # run validation every n_batch_2val batches
-            if bid % n_batch_2val == 0:
+            if bid > 0 and bid % n_batch_2val == 0:
                 model.eval()
                 val_loss = []
                 for val_batch in tqdm(valloader,
@@ -157,7 +160,10 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--batch_size", type=int,
                         default=64,
                         help="batch size")
+    parser.add_argument('--test', action=argparse.BooleanOptionalAction,
+                        default=False)
     args = parser.parse_args()
+    TESTING_CODE = args.test
     main(corpus_filepath=args.corpus,
          wordpiece_vocab_path=args.vocab,
          batch_size=args.batch_size)
