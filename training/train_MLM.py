@@ -85,7 +85,7 @@ def main(corpus_filepath: str, wordpiece_vocab_path: str, batch_size: int):
     trainloader = DataLoader(trainset, batch_size=batch_size,
                              shuffle=True, num_workers=0,
                              pin_memory=True, drop_last=True)
-    valloader = DataLoader(valset, batch_size=batch_size*10,
+    valloader = DataLoader(valset, batch_size=batch_size,
                            shuffle=True, num_workers=0,
                            pin_memory=True, drop_last=True)
     model = nn.DataParallel(BertMLM(
