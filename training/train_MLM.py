@@ -100,7 +100,8 @@ def main(corpus_filepath: str, wordpiece_vocab_path: str, batch_size: int):
     optim = torch.optim.AdamW(model.parameters(), lr=1e-4)
     torch.set_printoptions(edgeitems=10)
 
-    n_batch_2val = round(5e3 / batch_size) if TESTING_CODE else round(4e6 / batch_size)
+    n_batch_2val = round(5e3 / batch_size) if TESTING_CODE \
+        else round(4e6 / batch_size)
     for epoch in range(100):
         # train
         for bid, batch in tqdm(
@@ -147,7 +148,7 @@ def main(corpus_filepath: str, wordpiece_vocab_path: str, batch_size: int):
                     global_step=epoch * len(trainloader) + bid
                 )
         # save model after epoch
-        model.module.save_pretrained(f"./saved_models/bert_encoder_{epoch}")
+        model.module.save_pretrained(f"./saved_models/bert_encoder/{epoch}")
 
 
 if __name__ == "__main__":
