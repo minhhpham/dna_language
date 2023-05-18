@@ -25,9 +25,10 @@ class BertMLM(BertForMaskedLM):
             num_hidden_layers=num_hidden_layers,
             type_vocab_size=type_vocab_size
         ))
+        self.name = f"vocab{vocab_size}_emb{max_position_embeddings}_attn{num_attention_heads}_layers{num_hidden_layers}"  # noqa
 
 
-class BertSpelling(nn.Module):
+class BertCorrector(nn.Module):
 
     def __init__(
         self,

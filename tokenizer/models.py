@@ -5,6 +5,10 @@ import numpy as np
 from tokenizers import BertWordPieceTokenizer as BertWordPieceTokenizer_
 from transformers import BertTokenizerFast
 
+from collections import OrderedDict
+from torchtext.vocab import vocab, Vocab
+from segmentation.seq_segment import ProbabilitySegmentor
+
 
 class BertWordPieceTokenizer(BertWordPieceTokenizer_):
     def __init__(self) -> None:
@@ -59,3 +63,38 @@ class BertWordPieceTokenizerFast(BertTokenizerFast):
             batch_encodings["attention_mask"],
             split_sizes
         )
+
+
+class WordVocab(Vocab):
+    def __init__(self, vocab_file: str):
+        with open(vocab_file, "r") as file:
+            words = [line.strip() for line in file]
+        _vocab = OrderedDict((word, 1) for word in words)
+        _vocab = vocab(_vocab, specials=["[PAD]", "[UNK]"])
+        super().__init__(_vocab)
+        self.set_default_index(1)  # [UNK] index
+
+    def batch_tokenize(self, texts: List[str]) -> List[List[int]]:
+        return [
+            [self[word] for word in text.split()]
+            for text in texts
+        ]
+
+
+def segmentor_to_vocab(
+        segmentor: ProbabilitySegmentor,
+        vocab_size: int,
+        vocab_outfile: str,
+        ) -> WordVocab:
+    """extract vocab_size most frequent words from segmentor probability list"""
+    probs = [(k, v) for k, v in segmentor.prob.items()]
+    probs.sort(key=lambda x: x[1], reverse=True)
+    outfile = open(vocab_outfile, "w")
+    for i, (k, v) in enumerate(probs):
+        print(k, file=outfile, end="")
+        if i == vocab_size:
+            break
+        else:
+            print("\n")
+    outfile.close()
+    return WordVocab(vocab_outfile)    

@@ -7,9 +7,14 @@ from tensorflow_text import BertTokenizer
 from torch import nn, tensor
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
+import os
+import sys
 
-from corrector.models import BertMLM
-from training.monitor import TensorboardMonitor
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+from corrector.models import BertMLM  # noqa
+from training.monitor import TensorboardMonitor  # noqa
 
 tf.config.set_visible_devices([], 'GPU')
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -127,7 +132,7 @@ def main(corpus_filepath: str, wordpiece_vocab_path: str, batch_size: int):
             optim.step()
 
             # run validation every n_batch_2val batches
-            if bid > 0 and bid % n_batch_2val == 0:
+            if bid % n_batch_2val == 0:
                 model.eval()
                 val_loss = []
                 for val_batch in tqdm(valloader,
@@ -148,7 +153,8 @@ def main(corpus_filepath: str, wordpiece_vocab_path: str, batch_size: int):
                     global_step=epoch * len(trainloader) + bid
                 )
         # save model after epoch
-        model.module.save_pretrained(f"./saved_models/bert_encoder/{epoch}")
+        model.module.save_pretrained(
+            f"./saved_models/bert_encoder/{model.module.name}_{epoch}")
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ def query_db(limit=1e7, SRA: str = None) -> List[Tuple[str, str]]:
 
 
 def main(outfilepath: str, limit=1e7, SRA: str = None):
-    """get reference data from database and sasve into a corpus text file
+    """get reference data from database and save into a corpus text file
 
     Args:
         outfilepath: output file path
